@@ -1,0 +1,90 @@
+http:
+  port: 8082  
+
+apiEndpoints:
+  loginEndpoint:
+    host: "*"
+    paths: 
+      - "/api/admin/login" 
+      - "/api/ambassador/login"
+      - "/api/admin/logout"
+      - "/api/ambassador/logout"
+
+  userEndpoint:
+    host: "*"
+    paths:
+      - "/api/admin/register"
+      - "/api/ambassador/register"
+  
+  userProtected:
+    host: "*"
+    paths:
+      - "/api/ambassador/users/info"
+      - "/api/ambassador/users/password"
+      - "/api/admin/users/info"
+      - "/api/admin/users/password"
+      - "/api/admin/ambassadors"
+
+  checkoutEndpoint:
+    host: "*"
+    paths:
+      - "/api/admin/user"
+      - "/api/admin/products/*"
+      - "/api/admin/users/:id/links"
+      - "/api/admin/orders"
+      - "/api/ambassador/products/frontend"
+      - "/api/ambassador/products/backend"
+      - "/api/ambassador/links"
+      - "/api/ambassador/stats"
+      - "/api/ambassador/rankings"
+      - "/api/checkout/links/:code"
+      - "/api/checkout/orders"
+      - "/api/checkout/orders/confirm"
+      - "/api/admin/user"
+      - "/api/ambassador/user"
+
+serviceEndpoints:
+  user:
+    url: "http://localhost:8080" 
+  auth:
+    url: "http://localhost:8081"
+  checkout:
+    url: "http://localhost:8000"
+
+policies:
+  - proxy
+
+pipelines:
+  - name: user-public-pipeline
+    apiEndpoints:
+      - userEndpoint
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: user 
+              changeOrigin: true
+  - name: user-protected-pipeline
+    apiEndpoints:
+      - userProtected
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: user 
+              changeOrigin: true
+  - name: login
+    apiEndpoints:
+      - loginEndpoint
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: auth 
+              changeOrigin: true
+  - name: checkout
+    apiEndpoints:
+      - checkoutEndpoint
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: checkout 
+              changeOrigin: true
+
